@@ -1,3 +1,4 @@
+import { left, right } from '@/shared/lib/either'
 import cuid from 'cuid'
 import { Player } from '../domain'
 import { gameRepository } from '../repositories/game'
@@ -13,10 +14,7 @@ export async function createGame(player: Player) {
 	)
 
 	if (isGameInIdleStatus) {
-		return {
-			type: 'error',
-			error: 'can-create-game-only-one-game',
-		}
+		return left('can-create-only-one-game' as const)
 	}
 
 	const createdGame = await gameRepository.createGame({
@@ -25,5 +23,5 @@ export async function createGame(player: Player) {
 		status: 'idle',
 	})
 
-	return createdGame
+	return right(createdGame)
 }

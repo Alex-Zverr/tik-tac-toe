@@ -1,1 +1,1 @@
-export {} from './containers/games-list'
+export { GamesList } from './containers/games-list'
