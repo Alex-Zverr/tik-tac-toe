@@ -59,7 +59,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 					matchEither(error, {
 						right: () => null,
 						left: e => (
-							<div className='absolute left-0 top-[calc(100% _+_2px)] h-full w-full text-destructive'>
+							<div className='absolute left-1/2 -translate-x-1/2 top-[calc(100%_+_4px)] w-max rounded-md bg-gray-700 px-3 py-1.5 text-xs text-white'>
 								{e}
 							</div>
 						),

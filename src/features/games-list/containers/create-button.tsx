@@ -3,6 +3,7 @@
 import { mapLeft, right } from '@/shared/lib/either'
 import { useActionState } from '@/shared/lib/react'
 import { Button } from '@/shared/ui/button'
+import { startTransition } from 'react'
 import { createGameActions } from '../actions/create-game'
 
 export function CreateButton() {
@@ -14,7 +15,7 @@ export function CreateButton() {
 	return (
 		<Button
 			disabled={isPending}
-			onClick={dispatch}
+			onClick={() => startTransition(dispatch)}
 			error={mapLeft(
 				state,
 				e =>
