@@ -1,15 +1,10 @@
 'use server'
 
-import { createUser, sessionService } from '@/entities/user/server'
+import { sessionService, verifyUser } from '@/entities/user/server'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 
-const formDataSchema = z.object({
-	login: z.string().min(3),
-	password: z.string().min(3),
-})
-
-export type SignUpFromState = {
+export type SignInFromState = {
 	formData?: FormData
 	errors?: {
 		login?: string
@@ -18,10 +13,15 @@ export type SignUpFromState = {
 	}
 }
 
-export const signUpAction = async (
-	state: SignUpFromState,
+const formDataSchema = z.object({
+	login: z.string().min(3),
+	password: z.string().min(3),
+})
+
+export const signInAction = async (
+	state: SignInFromState,
 	formData: FormData
-): Promise<SignUpFromState> => {
+): Promise<SignInFromState> => {
 	const data = Object.fromEntries(formData.entries())
 	const parsed = formDataSchema.safeParse(data)
 
@@ -37,17 +37,17 @@ export const signUpAction = async (
 		}
 	}
 
-	const createUserResult = await createUser(parsed.data)
+	const verifyUserResult = await verifyUser(parsed.data)
 
-	if (createUserResult.type === 'right') {
-		await sessionService.addSession(createUserResult.value)
+	if (verifyUserResult.type === 'right') {
+		await sessionService.addSession(verifyUserResult.value)
 
 		redirect('/')
 	}
 
 	const errors = {
-		'user-login-exists': 'Логин занят',
-	}[createUserResult.error]
+		'wrong-password': 'Неправильный логин или пароль',
+	}[verifyUserResult.error]
 
 	return {
 		formData,

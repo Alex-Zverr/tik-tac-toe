@@ -1,12 +1,14 @@
 import { left, right } from '@/shared/lib/either'
 import { SignJWT, jwtVerify } from 'jose'
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 import 'server-only'
-import { SessionEntity } from '../domain'
+import { SessionEntity, UserEntity, userToSession } from '../domain'
 
 const secretKey = process.env.SESSION_SECRET
 const encodedKey = new TextEncoder().encode(secretKey)
 
-export async function encrypt(payload: SessionEntity) {
+async function encrypt(payload: SessionEntity) {
 	return new SignJWT(payload)
 		.setProtectedHeader({ alg: 'HS256' })
 		.setIssuedAt()
@@ -14,31 +16,46 @@ export async function encrypt(payload: SessionEntity) {
 		.sign(encodedKey)
 }
 
-export async function decrypt(session: string | undefined = '') {
+async function decrypt(session: string | undefined = '') {
 	try {
 		const { payload } = await jwtVerify(session, encodedKey, {
 			algorithms: ['HS256'],
 		})
-		return right(payload)
+		return right(payload as SessionEntity)
 	} catch (error) {
 		return left('invalid-session' as const)
 	}
 }
+async function addSession(user: UserEntity) {
+	const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
 
-// const createSessionCookie = async (user: UserEntity) => {
-// 	const userId = userToSession(user, new Date(Date.now() + 7 * 24 * 60 * 60 * 1000))
-// 	const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-//   const session = await encrypt({ userId, expiresAt })(await cookies()).set(
-//     'session',
-//     session,
-//     {
-//       httpOnly: true,
-//       secure: true,
-//       expires: expiresAt,
-//       sameSite: 'lax',
-//       path: '/',
-//     }
-//   )
-// }
+	const sessionData = userToSession(user, expiresAt)
+	const jwtToken = await encrypt(sessionData)
+	const sessionStore = await cookies()
 
-export const sessionService = { encrypt, decrypt }
+	sessionStore.set('session', jwtToken, {
+		httpOnly: true,
+		// secure: true,
+		expires: expiresAt,
+		sameSite: 'lax',
+		path: '/',
+	})
+}
+
+async function deleteSession() {
+	const sessionStore = await cookies()
+	sessionStore.delete('session')
+}
+
+async function verifySession() {
+	const cookie = (await cookies()).get('session')?.value
+	const session = await decrypt(cookie)
+
+	if (session.type === 'left') {
+		redirect('/sign-in')
+	}
+
+	return { isAuth: true, userId: session.value }
+}
+
+export const sessionService = { addSession, deleteSession, verifySession }

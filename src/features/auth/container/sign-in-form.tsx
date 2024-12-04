@@ -1,8 +1,7 @@
 'use client'
 
-import { right } from '@/shared/lib/either'
-import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useActionState } from '@/shared/lib/react'
+import { signInAction, SignInFromState } from '../actions/sign-in'
 import { AuthFields } from '../ui/auth-fields'
 import { AuthFormLayout } from '../ui/auth-form-layout'
 import { BottomLink } from '../ui/bottom-link'
@@ -10,36 +9,19 @@ import { ErrorMassage } from '../ui/error-massage'
 import { SubmitButton } from '../ui/submit-button'
 
 export function SignInForm() {
-	const [login, setLogin] = useState('')
-	const [password, setPassword] = useState('')
-	const [error, setError] = useState('')
-	const router = useRouter()
-
-	const handleSubmit = async (e: React.FormEvent) => {
-		e.preventDefault()
-		setError('')
-
-		if (!login || !password) {
-			setError('All fields are required')
-			return
-		}
-	}
+	const [fromState, action, isPending] = useActionState(
+		signInAction,
+		{} as SignInFromState
+	)
 
 	return (
 		<AuthFormLayout
 			title='Войти'
 			description='Войдите в свой аккаунт'
-			onSubmit={handleSubmit}
-			fields={
-				<AuthFields
-					login={login}
-					onChangeLogin={setLogin}
-					password={password}
-					onChangePassword={setPassword}
-				/>
-			}
-			actions={<SubmitButton>Войти</SubmitButton>}
-			error={<ErrorMassage error={right(null)} />}
+			action={action}
+			fields={<AuthFields {...fromState} />}
+			actions={<SubmitButton isPending={isPending}>Войти</SubmitButton>}
+			error={<ErrorMassage error={fromState.errors?._errors} />}
 			link={
 				<BottomLink
 					text='Нет аккаунта?'
