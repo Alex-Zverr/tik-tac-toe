@@ -55,7 +55,7 @@ async function verifySession() {
 		redirect('/sign-in')
 	}
 
-	return { isAuth: true, userId: session.value }
+	return { isAuth: true, session: session.value }
 }
 
 export const sessionService = { addSession, deleteSession, verifySession }
