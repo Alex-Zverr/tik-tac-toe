@@ -25,7 +25,7 @@ export function GameLayout({
 			<CardContent className='flex flex-col gap-4'>
 				{players}
 				{status}
-				{field}
+				<div className='flex justify-center items-center'>{field}</div>
 			</CardContent>
 			<CardFooter>{actions}</CardFooter>
 		</Card>

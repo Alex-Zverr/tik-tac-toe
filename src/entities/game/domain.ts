@@ -9,6 +9,7 @@ export type GameEntity =
 export type GameIdle = {
 	id: GameId
 	creator: Player
+	field: Field
 	status: 'idle'
 }
 
@@ -49,7 +50,9 @@ export const GameSymbol = {
 	O: 'O',
 }
 
-export const getGameCurrentStep = (game: GameInProgress) => {
+export const getGameCurrentStep = (
+	game: GameInProgress | GameFinishedVictory
+) => {
 	const symbols = game.field.filter(s => s !== null)?.length
 
 	return symbols % 2 === 0 ? GameSymbol.X : GameSymbol.O
